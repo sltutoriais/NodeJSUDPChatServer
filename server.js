@@ -91,8 +91,14 @@ socket.on('message', function(message,rinfo) {
 		  if(i.id != currentUser.id)
 		  {
 
+<<<<<<< HEAD
 		    var pack2 = "SPAWN_PLAYER"+':'+i.id+':'+i.name+':'+i.avatar;
 		    var msg_client = new Buffer.from(pack2);
+=======
+		    var pack2 = "SPAWN_PLAYER"+':'+i.id+':'+i.name+':'+i.position+':'+i.avatar;
+		    var msg_client = new Buffer.from(response)(pack2);
+
+>>>>>>> 156f4025f78339b474cf0babd1c6381c4236d984
 		    console.log('i.name: '+i.name);
 		    console.log('i.port: '+i.port);
 	        console.log('i.address: '+i.address);
@@ -122,7 +128,101 @@ socket.on('message', function(message,rinfo) {
 		 // send current user position in broadcast to all clients in game
          clients.forEach( function(i) {
 		 
+<<<<<<< HEAD
 		        socket.send(msg_currentUser,
+=======
+	  break;
+	  
+	  case "ATTACK":
+	   
+	   if(clientLookup[data[1]])
+	   {
+	      clientLookup[data[1]].timeOut = 0;
+		  
+	      var pack = "UPDATE_ATTACK"+':'+clientLookup[data[1]].id;
+		 
+		  var msg_currentUser = new Buffer.from(pack);
+		
+		 // send current user position in broadcast to all clients in game
+         clients.forEach( function(i) {
+		      
+			if(i.id != clientLookup[data[1]].id)
+		    {
+		         socket.send(msg_currentUser,
+                0,
+                msg_currentUser.length,
+                i.port,
+                i.address);
+			}
+	   });//END_forEach
+	   }
+		
+		 
+	  break;
+	  
+	  case "PHYSICAL_DAMAGE":
+
+	  var pack = "";
+		 
+	  if(clientLookup[data[1]])
+	  {
+		 clientLookup[data[1]].timeOut = 0;
+	  }
+	   if(clientLookup[data[2]])
+	   {
+	         
+	         var target = clientLookup[data[2]];
+	         var _damage= 10;
+	       // se o target não perdeu todo seu health
+		     if(target.health - _damage > 0)
+			 {
+			   //console.log("player: "+target.name+"received damage from: "+clientLookup[data[1]].name);
+			   //console.log(target.name+"health: "+ target.health);
+			   target.health -=_damage;//health decrement
+			 }
+			 //target death
+			 else
+			 {
+			    //if not dead
+                if(!target.isDead)
+               {				
+			   
+			     target.isDead = true;// target now is dead
+				 target.kills = 0;
+                 
+				 pack = "DEATH"+':'+clientLookup[data[2]].id;
+		 
+				
+				 var msg_currentUser = new Buffer.from(pack);
+		
+		         // send current user position in broadcast to all clients in game
+                 clients.forEach( function(i) {
+		   
+		                 socket.send(msg_currentUser,
+                         0,
+                         msg_currentUser.length,
+                         i.port,
+                         i.address);
+			      });//END_forEach
+				 
+		
+			   }//END_ if    
+			 }//END_ELSE
+		  
+		
+
+		  var pack = "UPDATE_PHYSICAL_DAMAGE"+':'+clientLookup[data[1]].id+':'+clientLookup[data[2]].id+
+		   ':'+clientLookup[data[2]].health;
+		  //console.log("pack: "+pack);
+		  var msg_currentUser = new Buffer.from(pack);
+		
+		 // send current user position in broadcast to all clients in game
+         clients.forEach( function(i) {
+		      
+			if(i.id != clientLookup[data[1]].id)
+		    {
+		         socket.send(msg_currentUser,
+>>>>>>> 156f4025f78339b474cf0babd1c6381c4236d984
                 0,
                 msg_currentUser.length,
                 i.port,
@@ -195,4 +295,73 @@ console.log('UDP Server listening on '+ address.address+':'+address.port);
 
 });//END_SOCKET.ON
 
+<<<<<<< HEAD
+=======
+
+function DisconnectClientByTimeOut(id){
+
+
+ var pack = "USER_DISCONNECTED"+':'+clientLookup[id].id;
+		 
+		 var msg_currentUser = new Buffer.from(pack);
+		
+         clients.forEach( function(i) {
+		       
+		   if(i)
+		   {
+			if(i.id != clientLookup[id].id)
+		    {
+		      socket.send(msg_currentUser,
+                0,
+                msg_currentUser.length,
+                i.port,
+                i.address);
+		    }
+			}
+	   });//END_forEach
+	   
+	   for (var i = 0; i < clients.length; i++)
+		  {
+		    if(clients[i])
+			{
+			if (clients[i].name == clientLookup[id].name 
+			          && clients[i].id == clientLookup[id].id) 
+			{
+
+				console.log("User "+clients[i].name+" has disconnected");
+				
+				//remove the current client from the list
+				clients.splice(i,1);
+
+			};//END_IF
+			}
+		  };//END_FOR
+}
+//function to update the players' timeOut
+function UpdateTimeOut() {
+
+   /*
+  console.log("update time out");
+
+       //foreach client updates timeOut
+         clients.forEach( function(i) {
+		    
+			if(clientLookup[i.id])
+			{
+			clientLookup[i.id].timeOut +=1;
+			
+			if(i.timeOut > maxTimeOut)
+			{
+			 DisconnectClientByTimeOut(i.id);
+			}
+			}
+		  });//end_forEach
+
+
+		  */
+}//END_SEND_UPDATES
+setInterval(UpdateTimeOut, 10000);//updates of 30 in 30 seconds
+
+
+>>>>>>> 156f4025f78339b474cf0babd1c6381c4236d984
 console.log("------- server is running -------");
