@@ -1,8 +1,8 @@
 /*
-*@autor: Sebastiao Lucio Reis de Souza
+*@autor: Rio 3D Studios
 *@description:  java script file that works as master udp server of the UDP Multiplayer Online Game
 *               for more information visit: https://nodejs.org/api/dgram.html
-*@update data: 13/02/2020
+*@update data: 13/05/2020
 */
 var express  = require('express');//import express NodeJS framework module
 var app      = express();// create an object of the express module
@@ -18,7 +18,7 @@ var maxTimeOut = 20;
 
 socket.on('message', function(message,rinfo) {
 
- //console.log('server got message: '+message+' from address# '+rinfo.address);
+ console.log('server got message: '+message+' from address# '+rinfo.address);
 
     
 	//var data = JSON.parse(message);//parse message to json format
@@ -27,52 +27,20 @@ socket.on('message', function(message,rinfo) {
 	switch(data[0] )
 	{
 	  
-      case "PING":
-	  
-	     console.log('[INFO] test ping received !!! ');
-	     console.log('server got message: '+message+' from address# '+rinfo.address+' port# '+rinfo.port );  
-	     
-		 //format the data with the sifter comma for they be send from turn to udp client
-		 var response = "PONG"+':'+"pong!!!";
-		
-		//buffering response in byte array
-		 var msg = new Buffer.from(response);
-		 
-		 console.log('send response to client');
-		 
-		 //Sending Messages back to udp client
-	     socket.send(msg,
-                0,
-                msg.length,
-                rinfo.port,//udp client port
-                rinfo.address//udp client IP
-				    );
-				
-	     console.log('message send');
-	  break;
-	  
 	  case "JOIN":
 	    console.log('[INFO] JOIN received !!! ');
 	  	 // fills out with the information emitted by the player in the unity
 		currentUser = {
 			       name:data[1],
-                   position:data[2],
-				   rotation:'',
 			       id:shortId.generate(),
-				   avatar:data[3],
-				   animation:"",
-				   health:100,
-			       maxHealth:100,
-			       kills:0,
+				   avatar:data[2],
 				   timeOut:0,
-				   isDead:false,
 				   port:rinfo.port,
 			       address:rinfo.address 
 				   };//new user  in clients list
 					
 		console.log('[INFO] data[2] '+data[2]);
 		console.log('[INFO] player '+currentUser.name+': logged!');
-		console.log('[INFO] currentUser.position '+currentUser.position);
 		
 	     //add currentUser in clients list
 		 clients.push(currentUser);
@@ -83,7 +51,7 @@ socket.on('message', function(message,rinfo) {
 		 console.log('[INFO] Total players: ' + clients.length);
 		
 		/*********************************************************************************************/		
-		 var response = "JOIN_SUCCESS"+':'+currentUser.id+':'+currentUser.name+':'+currentUser.position;
+		 var response = "JOIN_SUCCESS"+':'+currentUser.id+':'+currentUser.name+':'+currentUser.avatar;
 		
 		 console.log('send LOGIN_SUCCESS to port :'+  rinfo.port+' and address: '+ rinfo.address);
 		 var msg = new Buffer.from(response);
@@ -97,7 +65,7 @@ socket.on('message', function(message,rinfo) {
 		/*******************************************************************************************************************/		
 	    
 		/*******************************************************************************************************************/		
-		var pack1 = "SPAWN_PLAYER"+':'+currentUser.id+':'+currentUser.name+':'+currentUser.position+':'+currentUser.avatar;
+		var pack1 = "SPAWN_PLAYER"+':'+currentUser.id+':'+currentUser.name+':'+currentUser.avatar;
 		 
 		 var msg_currentUser = new Buffer.from(pack1);
 		 
@@ -122,13 +90,9 @@ socket.on('message', function(message,rinfo) {
 		  
 		  if(i.id != currentUser.id)
 		  {
-<<<<<<< HEAD
-		    var pack2 = "SPAWN_PLAYER"+':'+i.id+':'+i.name+':'+i.position+':'+i.avatar;
-		    var msg_client = new Buffer.from(response)(pack2);
-=======
-		    var pack2 = "SPAWN_PLAYER"+','+i.id+','+i.name+','+i.position+','+i.rotation;
+
+		    var pack2 = "SPAWN_PLAYER"+':'+i.id+':'+i.name+':'+i.avatar;
 		    var msg_client = new Buffer.from(pack2);
->>>>>>> 8092832c6affa4085ed3e2151b84c534a94d528a
 		    console.log('i.name: '+i.name);
 		    console.log('i.port: '+i.port);
 	        console.log('i.address: '+i.address);
@@ -142,204 +106,36 @@ socket.on('message', function(message,rinfo) {
 	     });//end_forEach
 		 
 	  break;
+	  case "MESSAGE":
 	  
-	   case "RESPAWN":
-	   if(clientLookup[data[1]])
+	  console.log("receive message");
+	  if(clientLookup[data[1]])
 	   {
-	     clientLookup[data[1]].isDead = false;
-		 clientLookup[data[1]].health = clientLookup[data[1]].maxHealth;
-		  
-		 var response = "RESPAW_PLAYER"+':'+clientLookup[data[1]].id+':'+clientLookup[data[1]].name+':'+clientLookup[data[1]].position
-		 +':'+clientLookup[data[1]].rotation;
-	
-		 var msg = new Buffer.from(response);
-	
-		  socket.send(msg,
-                 0,
-                 msg.length,
-                 rinfo.port,
-                 rinfo.address);
-			 
-	     
-		var pack2 = "SPAWN_PLAYER"+':'+clientLookup[data[1]].id+':'+clientLookup[data[1]].name+':'+
-		clientLookup[data[1]].position+':'+clientLookup[data[1]].rotation;
-		 
-		 var msg_currentUser = new Buffer.from(pack2);
-			  // send current user position in broadcast to all clients in game
-         clients.forEach( function(i) {
-		      
-			if(i.id != clientLookup[data[1]].id)
-		    {
-		         socket.send(msg_currentUser,
-                0,
-                msg_currentUser.length,
-                i.port,
-                i.address);
-			}
-	   });//END_forEach
-		 
-	   }
-	   break;
-	  
-	   case "POS_AND_ROT":
-	   
-	    //console.log('[INFO] MOVE_AND_ROTATE received !!! ');
-		
-		if(clientLookup[data[1]])
-	   {
+	     console.log("player found");
 	     clientLookup[data[1]].timeOut = 0;
-	     clientLookup[data[1]].position = data[2];
-	  
-	     clientLookup[data[1]].rotation = data[3];
+	     
 		 
-		 var pack = "UPDATE_POS_AND_ROT"+':'+clientLookup[data[1]].id+':'+clientLookup[data[1]].position+':'+clientLookup[data[1]].rotation;
+		 var pack = "UPDATE_MESSAGE"+':'+clientLookup[data[1]].id+':'+data[2]+':'+clientLookup[data[1]].avatar;
 		 
 		 var msg_currentUser = new Buffer.from(pack);
 		
 		 // send current user position in broadcast to all clients in game
          clients.forEach( function(i) {
-		      
-			if(i.id != clientLookup[data[1]].id)
-		    {
-		         socket.send(msg_currentUser,
+		 
+		        socket.send(msg_currentUser,
                 0,
                 msg_currentUser.length,
                 i.port,
                 i.address);
-			}
+			
 	   });//END_forEach
 	}
 		 
 	  break;
-	  
-	  case "ATTACK":
-	   
-	   if(clientLookup[data[1]])
-	   {
-	      clientLookup[data[1]].timeOut = 0;
-		  
-	      var pack = "UPDATE_ATTACK"+':'+clientLookup[data[1]].id;
-		 
-		  var msg_currentUser = new Buffer.from(pack);
-		
-		 // send current user position in broadcast to all clients in game
-         clients.forEach( function(i) {
-		      
-			if(i.id != clientLookup[data[1]].id)
-		    {
-		         socket.send(msg_currentUser,
-                0,
-                msg_currentUser.length,
-                i.port,
-                i.address);
-			}
-	   });//END_forEach
-	   }
-		
-		 
-	  break;
-	  
-	  case "PHYSICAL_DAMAGE":
-
-	  var pack = "";
-		 
-	  if(clientLookup[data[1]])
-	  {
-		 clientLookup[data[1]].timeOut = 0;
-	  }
-	   if(clientLookup[data[2]])
-	   {
-	         
-	         var target = clientLookup[data[2]];
-	         var _damage= 10;
-	       // se o target não perdeu todo seu health
-		     if(target.health - _damage > 0)
-			 {
-			   //console.log("player: "+target.name+"received damage from: "+clientLookup[data[1]].name);
-			   //console.log(target.name+"health: "+ target.health);
-			   target.health -=_damage;//health decrement
-			 }
-			 //target death
-			 else
-			 {
-			    //if not dead
-                if(!target.isDead)
-               {				
-			   
-			     target.isDead = true;// target now is dead
-				 target.kills = 0;
-                 
-				 pack = "DEATH"+':'+clientLookup[data[2]].id;
-		 
-				
-				 var msg_currentUser = new Buffer.from(pack);
-		
-		         // send current user position in broadcast to all clients in game
-                 clients.forEach( function(i) {
-		   
-		                 socket.send(msg_currentUser,
-                         0,
-                         msg_currentUser.length,
-                         i.port,
-                         i.address);
-			      });//END_forEach
-				 
-		
-			   }//END_ if    
-			 }//END_ELSE
-		  
-		
-
-		  var pack = "UPDATE_PHYSICAL_DAMAGE"+':'+clientLookup[data[1]].id+':'+clientLookup[data[2]].id+
-		   ','+clientLookup[data[2]].health;
-		  //console.log("pack: "+pack);
-		  var msg_currentUser = new Buffer.from(pack);
-		
-		 // send current user position in broadcast to all clients in game
-         clients.forEach( function(i) {
-		      
-			if(i.id != clientLookup[data[1]].id)
-		    {
-		         socket.send(msg_currentUser,
-                0,
-                msg_currentUser.length,
-                i.port,
-                i.address);
-			}
-	   });//END_forEach
-
-	   }//END_IF
-	   
-	  break;  
-	  
-	  
-	  case "ANIMATION":
-	   
-	     //console.log('user: '+clientLookup[data.local_player_id].name+' new : '+data.animation+' animation');
-	     clientLookup[data[1]].animation = data[2];
-	  
-		 var pack = "UPDATE_PLAYER_ANIMATOR"+':'+clientLookup[data[1]].id+':'+clientLookup[data[1]].animation;
-		 
-		 var msg_currentUser = new Buffer.from(pack);
-		
-		 // send current user animation in broadcast to all clients in game
-         clients.forEach( function(i) {
-		  
-		    if(i.id != clientLookup[data[1]].id)
-		    {
-		      socket.send(msg_currentUser,
-                0,
-                msg_currentUser.length,
-                i.port,
-                i.address);
-		    }
-	   });//END_forEach
-	   
-	   
-	  break;
-	  
 	  case "disconnect":
-	    if(clientLookup[data[1]].name)
+	   
+	   console.log('data[1]: '+data[1]);
+	    if(clientLookup[data[1]])
 		{
 	     console.log('user: '+clientLookup[data[1]].name+' tring desconnect');
 	   
@@ -369,11 +165,15 @@ socket.on('message', function(message,rinfo) {
 				
 				//remove the current client from the list
 				clients.splice(i,1);
+				
 
 			};//END_IF
 		  };//END_FOR
+		 
+		delete clientLookup[data[1]];
 		  }
        break; 
+	  
 	   
 	}//END-SWITCH	
 	
@@ -394,71 +194,5 @@ var address = socket.address();
 console.log('UDP Server listening on '+ address.address+':'+address.port);
 
 });//END_SOCKET.ON
-
-
-function DisconnectClientByTimeOut(id){
-
-
- var pack = "USER_DISCONNECTED"+','+clientLookup[id].id;
-		 
-		 var msg_currentUser = new Buffer.from(pack);
-		
-         clients.forEach( function(i) {
-		       
-		   if(i)
-		   {
-			if(i.id != clientLookup[id].id)
-		    {
-		      socket.send(msg_currentUser,
-                0,
-                msg_currentUser.length,
-                i.port,
-                i.address);
-		    }
-			}
-	   });//END_forEach
-	   
-	   for (var i = 0; i < clients.length; i++)
-		  {
-		    if(clients[i])
-			{
-			if (clients[i].name == clientLookup[id].name 
-			          && clients[i].id == clientLookup[id].id) 
-			{
-
-				console.log("User "+clients[i].name+" has disconnected");
-				
-				//remove the current client from the list
-				clients.splice(i,1);
-
-			};//END_IF
-			}
-		  };//END_FOR
-}
-//function to update the players' timeOut
-function UpdateTimeOut() {
-
-   /*
-  console.log("update time out");
-
-       //foreach client updates timeOut
-         clients.forEach( function(i) {
-		    
-			if(clientLookup[i.id])
-			{
-			clientLookup[i.id].timeOut +=1;
-			
-			if(i.timeOut > maxTimeOut)
-			{
-			 DisconnectClientByTimeOut(i.id);
-			}
-			}
-		  });//end_forEach
-
-
-		  */
-}//END_SEND_UPDATES
-setInterval(UpdateTimeOut, 10000);//updates of 30 in 30 seconds
-
 
 console.log("------- server is running -------");
